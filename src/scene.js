@@ -32,16 +32,47 @@ export function createScene() {
                 // 1. Load the mesh/3D object corresponding to the tile at (x, y)
                 // 2. Add that mesh to the scene
                 // 3. Add that mesh to the meshes array
+                // Grass Geometry
                 const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                const material = new THREE.MeshLambertMaterial({ color: 0x00aa00 });
                 const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(x, 0, y);
+                mesh.position.set(x, -0.5, y);
                 scene.add(mesh);
                 column.push(mesh);
+
+                // Building Geometry
+                const tile = city.data[x][y]
+
+                if (tile.building === 'building') {
+                    const buildinggeometry = new THREE.BoxGeometry(1, 1, 1);
+                    const buildingmaterial = new THREE.MeshLambertMaterial({ color: 0x777777 });
+                    const buildingmesh = new THREE.Mesh(buildinggeometry, buildingmaterial);
+                    buildingmesh.position.set(x, 0.5, y);
+                    scene.add(buildingmesh);
+                    column.push(buildingmesh);
+                }
             }
             meshes.push(column);
         }
+        
+        setupLights();
 
+    }
+
+
+    function setupLights() {
+        const lights = [
+            new THREE.AmbientLight(0xffffff, 0.2),
+            new THREE.DirectionalLight(0xffffff, 0.3),
+            new THREE.DirectionalLight(0xffffff, 0.3),
+            new THREE.DirectionalLight(0xffffff, 0.3)
+        ];
+
+        lights[1].position.set(0, 1, 0);
+        lights[2].position.set(1, 1, 0);
+        lights[3].position.set(0, 1, 1);
+
+        scene.add(...lights);
     }
 
 
