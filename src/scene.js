@@ -37,12 +37,12 @@ export function createScene() {
         renderer.setAnimationLoop(null);
     }
 
-    function onMouseDown() {
-        camera.onMouseDown();
+    function onMouseDown(event) {
+        camera.onMouseDown(event);
     }
 
-    function onMouseUp() {
-        camera.onMouseUp();
+    function onMouseUp(event) {
+        camera.onMouseUp(event);
     }
 
     function onMouseMove(event) {
