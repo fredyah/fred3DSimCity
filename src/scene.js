@@ -18,10 +18,32 @@ export function createScene() {
     gameWindow.appendChild(renderer.domElement);
 
 
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
+
+
+
+    let meshes = [];
+
+    function initialize(city) {
+        scene.clear();
+        meshes = [];
+        for (let x = 0; x < city.size; x++) {
+            const column = [];
+            for (let y = 0; y < city.size; y++) {
+                // 1. Load the mesh/3D object corresponding to the tile at (x, y)
+                // 2. Add that mesh to the scene
+                // 3. Add that mesh to the meshes array
+                const geometry = new THREE.BoxGeometry(1, 1, 1);
+                const material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+                const mesh = new THREE.Mesh(geometry, material);
+                mesh.position.set(x, 0, y);
+                scene.add(mesh);
+                column.push(mesh);
+            }
+            meshes.push(column);
+        }
+
+    }
+
 
     function draw() {
         // mesh.rotation.x += 0.01;
@@ -52,6 +74,7 @@ export function createScene() {
 
 
     return {
+        initialize,
         start,
         stop,
         onMouseDown,
