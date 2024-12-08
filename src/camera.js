@@ -6,8 +6,8 @@ export function createCamera(gameWindow) {
     const MIDDLE_MOUSE_BUTTON = 1;
     const RIGHT_MOUSE_BUTTON = 2;
 
-    const MIN_CAMERA_RADIUS = 150;
-    const MAX_CAMERA_RADIUS = 300;
+    const MIN_CAMERA_RADIUS = 1;
+    const MAX_CAMERA_RADIUS = 6;
 
     const MIN_CAMERA_ELEVATION = 30;
     const MAX_CAMERA_ELEVATION = 90;
