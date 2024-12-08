@@ -24,7 +24,7 @@ export function createScene() {
 
         const loader = new GLTFLoader();
         loader.load(
-            './models/stylized_hand_painted_scene.glb',
+            './models/untitled.glb',
             (gltf) => {
                 const model = gltf.scene;
                 model.position.set(0, 0, 0);
