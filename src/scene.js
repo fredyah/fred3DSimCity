@@ -14,6 +14,8 @@ export function createScene() {
     gameWindow.appendChild(renderer.domElement);
 
     let loadedModels = [];
+    let mixer = null; // AnimationMixer
+    const clock = new THREE.Clock(); // 用於計算時間差
 
     // 初始化場景
     function initialize() {
@@ -22,12 +24,21 @@ export function createScene() {
 
         const loader = new GLTFLoader();
         loader.load(
-            './public/models/dusk_lighting_scene.glb',
+            './models/stylized_hand_painted_scene.glb',
             (gltf) => {
                 const model = gltf.scene;
                 model.position.set(0, 0, 0);
                 scene.add(model);
                 loadedModels.push(model);
+
+                // 初始化 AnimationMixer 並播放動畫
+                if (gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(model);
+                    gltf.animations.forEach((clip) => {
+                        const action = mixer.clipAction(clip);
+                        action.play();
+                    });
+                }
             },
             undefined,
             (error) => {
@@ -54,6 +65,10 @@ export function createScene() {
 
     // 繪製函數
     function draw() {
+        const delta = clock.getDelta(); // 更新時間差
+        if (mixer) {
+            mixer.update(delta); // 更新動畫
+        }
         renderer.render(scene, camera.camera);
     }
 
