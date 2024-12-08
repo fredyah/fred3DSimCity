@@ -1,84 +1,42 @@
-// import * as THREE from 'https://unpkg.com/three/build/three.module.js';
 import * as THREE from 'three';
 import { createCamera } from './camera.js';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export function createScene() {
-    // Initial Scene Setup
     const gameWindow = document.getElementById('render-target');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x777777);
 
-
-
-    // camera.position.z = 5;
     const camera = createCamera(gameWindow);
 
     const renderer = new THREE.WebGLRenderer();
     renderer.setSize(gameWindow.offsetWidth, gameWindow.offsetHeight);
     gameWindow.appendChild(renderer.domElement);
 
+    let loadedModels = [];
 
-
-
-
-    let terrain = [];
-    let buildings = [];
-
-    function initialize(city) {
+    // 初始化場景
+    function initialize() {
         scene.clear();
-        terrain = [];
-        buildings = [];
-        for (let x = 0; x < city.size; x++) {
-            const column = [];
-            for (let y = 0; y < city.size; y++) {
-                // 1. Load the mesh/3D object corresponding to the tile at (x, y)
-                // 2. Add that mesh to the scene
-                // 3. Add that mesh to the terrain array
-                // Grass Geometry
-                const geometry = new THREE.BoxGeometry(1, 1, 1);
-                const material = new THREE.MeshLambertMaterial({ color: 0x00aa00 });
-                const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(x, -0.5, y);
-                scene.add(mesh);
-                column.push(mesh);
-
-            }
-            
-            terrain.push(column);
-            buildings.push([...Array(city.size)]);
-        }
-        
         setupLights();
 
-    }
-
-
-    function update(city) {
-        for (let x = 0; x < city.size; x++) {
-            for (let y = 0; y < city.size; y++) {
-
-                // Building Geometry
-                const tile = city.data[x][y];
-
-                if (tile.building && tile.building.startsWith('building')) {
-                    const height = Number(tile.building.slice(-1));
-                    const buildingGeometry = new THREE.BoxGeometry(1, height, 1);
-                    const buildingMaterial = new THREE.MeshLambertMaterial({ color: 0x777777 });
-                    const buildingMesh = new THREE.Mesh(buildingGeometry, buildingMaterial);
-                    buildingMesh.position.set(x, height / 2, y);
-
-                    if (buildings[x][y]) {
-                        scene.remove(buildings[x][y]);
-                    }
-                    scene.add(buildingMesh);
-                    buildings[x][y] = buildingMesh;
-                }
+        const loader = new GLTFLoader();
+        loader.load(
+            './public/models/dusk_lighting_scene.glb',
+            (gltf) => {
+                const model = gltf.scene;
+                model.position.set(0, 0, 0);
+                scene.add(model);
+                loadedModels.push(model);
+            },
+            undefined,
+            (error) => {
+                console.error('Error loading GLTF model:', error);
             }
-        }
+        );
     }
 
-
-
+    // 燈光設置
     function setupLights() {
         const lights = [
             new THREE.AmbientLight(0xffffff, 0.2),
@@ -94,13 +52,12 @@ export function createScene() {
         scene.add(...lights);
     }
 
-
+    // 繪製函數
     function draw() {
-        // mesh.rotation.x += 0.01;
-        // mesh.rotation.y += 0.01;
         renderer.render(scene, camera.camera);
     }
 
+    // 控制動畫循環
     function start() {
         renderer.setAnimationLoop(draw);
     }
@@ -109,27 +66,41 @@ export function createScene() {
         renderer.setAnimationLoop(null);
     }
 
+    // 處理滑鼠事件
     function onMouseDown(event) {
         camera.onMouseDown(event);
-    }
-
-    function onMouseUp(event) {
-        camera.onMouseUp(event);
     }
 
     function onMouseMove(event) {
         camera.onMouseMove(event);
     }
 
+    function onMouseUp(event) {
+        camera.onMouseUp(event);
+    }
 
+    // 處理觸控事件
+    function onTouchStart(event) {
+        camera.onTouchStart(event);
+    }
+
+    function onTouchMove(event) {
+        camera.onTouchMove(event);
+    }
+
+    function onTouchEnd(event) {
+        camera.onTouchEnd(event);
+    }
 
     return {
         initialize,
-        update,
         start,
         stop,
         onMouseDown,
+        onMouseMove,
         onMouseUp,
-        onMouseMove
-    }
+        onTouchStart,
+        onTouchMove,
+        onTouchEnd
+    };
 }

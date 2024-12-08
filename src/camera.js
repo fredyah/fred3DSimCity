@@ -17,79 +17,107 @@ export function createCamera(gameWindow) {
 
     const Y_AXIS = new THREE.Vector3(0, 1, 0);
 
+    const camera = new THREE.PerspectiveCamera(
+        75,
+        gameWindow.offsetWidth / gameWindow.offsetHeight,
+        0.1,
+        1000
+    );
 
-    const camera = new THREE.PerspectiveCamera(75, gameWindow.offsetWidth / gameWindow.offsetHeight, 0.1, 1000);
     let cameraOrigin = new THREE.Vector3();
     let cameraRadius = (MIN_CAMERA_RADIUS + MAX_CAMERA_RADIUS) / 2;
-    let cameraAzimuth = 135
+    let cameraAzimuth = 135;
     let cameraElevation = 45;
+
     let isLeftMouseDown = false;
-    let isRightMouseDown = false;
     let isMiddleMouseDown = false;
+    let isRightMouseDown = false;
+    let isTouchActive = false;
+
     let prevMouseX = 0;
     let prevMouseY = 0;
+
     updateCameraPosition();
 
-
+    // 滑鼠事件處理
     function onMouseDown(event) {
-        console.log('mousedown');
-        
-        if (event.button === LEFT_MOUSE_BUTTON) {
-            isLeftMouseDown = true;
-        }
-        if (event.button === MIDDLE_MOUSE_BUTTON) {
-            isMiddleMouseDown = true;
-        }
-        if (event.button === RIGHT_MOUSE_BUTTON) {
-            isRightMouseDown = true;
-        }
-    }
+        event.preventDefault();
+        if (event.button === LEFT_MOUSE_BUTTON) isLeftMouseDown = true;
+        if (event.button === MIDDLE_MOUSE_BUTTON) isMiddleMouseDown = true;
+        if (event.button === RIGHT_MOUSE_BUTTON) isRightMouseDown = true;
 
-    function onMouseUp(event) {
-        console.log('mouseup');
-
-        if (event.button === LEFT_MOUSE_BUTTON) {
-            isLeftMouseDown = false;
-        }
-        if (event.button === MIDDLE_MOUSE_BUTTON) {
-            isMiddleMouseDown = false;
-        }
-        if (event.button === RIGHT_MOUSE_BUTTON) {
-            isRightMouseDown = false;
-        }
+        prevMouseX = event.clientX;
+        prevMouseY = event.clientY;
     }
 
     function onMouseMove(event) {
-        console.log('mousemove');
-        const deltaX = (event.clientX - prevMouseX);
-        const deltaY = (event.clientY - prevMouseY);
+        if (!isLeftMouseDown && !isMiddleMouseDown && !isRightMouseDown) return;
 
-        // Left Mouse Down for Handle the rotation of camera
+        event.preventDefault();
+        const deltaX = event.clientX - prevMouseX;
+        const deltaY = event.clientY - prevMouseY;
+
         if (isLeftMouseDown) {
-            cameraAzimuth += -(deltaX * 0.5);
-            cameraElevation += (deltaY * 0.5);
-            cameraElevation = Math.min(180, Math.max(0, cameraElevation));
+            cameraAzimuth -= deltaX * ROTATION_SENSITIVITY;
+            cameraElevation += deltaY * ROTATION_SENSITIVITY;
+            cameraElevation = Math.max(MIN_CAMERA_ELEVATION, Math.min(MAX_CAMERA_ELEVATION, cameraElevation));
             updateCameraPosition();
         }
 
-        // Middle Mouse Down for Handle the panning of the camera
         if (isMiddleMouseDown) {
             const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(Y_AXIS, cameraAzimuth * DEG2RAD);
             const left = new THREE.Vector3(1, 0, 0).applyAxisAngle(Y_AXIS, cameraAzimuth * DEG2RAD);
-            cameraOrigin.add(forward.multiplyScalar(-0.01 * deltaY));
-            cameraOrigin.add(left.multiplyScalar(-0.01 * deltaX));
+            cameraOrigin.add(forward.multiplyScalar(PAN_SENSITIVITY * deltaY));
+            cameraOrigin.add(left.multiplyScalar(PAN_SENSITIVITY * deltaX));
             updateCameraPosition();
         }
 
-        // Right Mouse Down for Handle the zoom of the camera
         if (isRightMouseDown) {
-            cameraRadius += deltaY * 0.02;
-            cameraRadius = Math.min(MAX_CAMERA_RADIUS, Math.max(MIN_CAMERA_RADIUS, cameraRadius));
+            cameraRadius += deltaY * ZOOM_SENSITIVITY;
+            cameraRadius = Math.max(MIN_CAMERA_RADIUS, Math.min(MAX_CAMERA_RADIUS, cameraRadius));
             updateCameraPosition();
         }
 
         prevMouseX = event.clientX;
         prevMouseY = event.clientY;
+    }
+
+    function onMouseUp(event) {
+        event.preventDefault();
+        isLeftMouseDown = false;
+        isMiddleMouseDown = false;
+        isRightMouseDown = false;
+    }
+
+    // 觸控事件處理
+    function onTouchStart(event) {
+        event.preventDefault();
+        if (event.touches.length === 1) {
+            isTouchActive = true;
+            prevMouseX = event.touches[0].clientX;
+            prevMouseY = event.touches[0].clientY;
+        }
+    }
+
+    function onTouchMove(event) {
+        if (!isTouchActive) return;
+
+        event.preventDefault();
+        const deltaX = event.touches[0].clientX - prevMouseX;
+        const deltaY = event.touches[0].clientY - prevMouseY;
+
+        cameraAzimuth -= deltaX * ROTATION_SENSITIVITY;
+        cameraElevation += deltaY * ROTATION_SENSITIVITY;
+        cameraElevation = Math.max(MIN_CAMERA_ELEVATION, Math.min(MAX_CAMERA_ELEVATION, cameraElevation));
+        updateCameraPosition();
+
+        prevMouseX = event.touches[0].clientX;
+        prevMouseY = event.touches[0].clientY;
+    }
+
+    function onTouchEnd(event) {
+        event.preventDefault();
+        isTouchActive = false;
     }
 
     function updateCameraPosition() {
@@ -104,7 +132,10 @@ export function createCamera(gameWindow) {
     return {
         camera,
         onMouseDown,
+        onMouseMove,
         onMouseUp,
-        onMouseMove
-    }
+        onTouchStart,
+        onTouchMove,
+        onTouchEnd,
+    };
 }
